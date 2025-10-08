@@ -11,10 +11,12 @@
 static const int FAKE_INT = -1;
 static TBitField FAKE_BITFIELD(1);
 
+static const int cBITS = sizeof(TELEM) * 8;
+
 TBitField::TBitField(int len)
 {
 	size = len / (sizeof(TELEM) * 8) + 1;
-	Mem = new unsigned int[size];
+	Mem = new TELEM[size];
 	for (int i = 0; i < size; i++) {
 		Mem[i] = 0;
 	}
@@ -22,52 +24,69 @@ TBitField::TBitField(int len)
 
 TBitField::TBitField(const TBitField &bf) // конструктор копирования
 {
-	if (size != bf.size) { //не нужны этми два иф
-		if (size != 0) {
-			delete[] Mem;
-		}
-		size = bf.size;
-		Mem = new unsigned int[size];
-	}
+	size = bf.size;
+	pMem = new TELEM[size];
 	for (int i = 0; i < size; i++) {
-		Mem[i] = bf.Mem[i];
+		pMem[i] = bf.pMem[i];
 	}
 	return *this;	
 }
 
 TBitField::~TBitField()
 {
-	delete[]Mem;
+	delete[]pMem;
 }
 
 int TBitField::GetMemIndex(const int n) const // индекс Мем для бита n
 {
-    return FAKE_INT;
+	return n / cBITS;
 }
 
 TELEM TBitField::GetMemMask(const int n) const // битовая маска для бита n
 {
-    return FAKE_INT;
+	TELEM mask = 1;
+	mask <<= n % cBITS;
+    return mask;
 }
 
 // доступ к битам битового поля
 
 int TBitField::GetLength(void) const // получить длину (к-во битов)
 {
-  return FAKE_INT;
+	return BitLen;
 }
 
 void TBitField::SetBit(const int n) // установить бит
 {
+	if (n < 0 || n >= bitLen)
+		throw std::out_of_range("Bit position out of range");
+
+	int index = GetMemIndex(n);
+	TELEM mask = GetMemMask(n);
+
+	pMem[index] |= mask; 
 }
 
 void TBitField::ClrBit(const int n) // очистить бит
 {
+	if (n < 0 || n >= bitLen)
+		throw std::out_of_range("Bit position out of range");
+
+	int index = GetMemIndex(n);
+	TELEM mask = GetMemMask(n);
+
+	pMem[index] &= ~mask;
 }
 
 int TBitField::GetBit(const int n) const // получить значение бита
 {
-  return FAKE_INT;
+	if (n < 0 || n >= bitLen)
+		throw std::out_of_range("Bit position out of range");
+
+	int index = GetMemIndex(n);
+	TELEM mask = GetMemMask(n);
+
+	pMem[index] &= mask;
 }
 
 // битовые операции
