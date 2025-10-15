@@ -93,32 +93,85 @@ int TBitField::GetBit(const int n) const // получить значение б
 
 TBitField& TBitField::operator=(const TBitField &bf) // присваивание
 {
-    return FAKE_BITFIELD;
+	if (this == &bf)
+		return *this;
+
+	if (memLen != bf.memLen) {
+		delete[] pMem;
+		memLen = bf.memLen;
+		pMem = new TELEM[memLen];
+	}
+
+	bitLen = bf.bitLen;
+	for (int i = 0; i < memLen; i++) {
+		pMem[i] = bf.pMem[i];
+	}
+
+	return *this;
 }
 
 int TBitField::operator==(const TBitField &bf) const // сравнение
 {
-  return FAKE_INT;
+	if (bitLen != bf.bitLen)
+		return 0;
+
+	for (int i = 0; i < memLen; i++) {
+		if (pMem[i] != bf.pMem[i])
+			return 0;
+	}
+
+	return 1;
 }
 
 int TBitField::operator!=(const TBitField &bf) const // сравнение
 {
-  return FAKE_INT;
+	return !(*this == bf);
 }
 
 TBitField TBitField::operator|(const TBitField &bf) // операция "или"
 {
-    return FAKE_BITFIELD;
+	if (bitLen != bf.bitLen)
+		throw std::invalid_argument("Error: The bit length must match.");
+
+	TBitField result(bitLen);
+
+	for (int i = 0; i < memLen; i++) {
+		result.pMem[i] = pMem[i] | bf.pMem[i];
+	}
+
+	return result;
 }
 
 TBitField TBitField::operator&(const TBitField &bf) // операция "и"
 {
-    return FAKE_BITFIELD;
+	if (bitLen != bf.bitLen)
+		throw std::invalid_argument("Error: The bit length must match.");
+
+	TBitField result(bitLen);
+
+	for (int i = 0; i < memLen; i++) {
+		result.pMem[i] = pMem[i] & bf.pMem[i];
+	}
+
+	return result;
 }
 
 TBitField TBitField::operator~(void) // отрицание
 {
-    return FAKE_BITFIELD;
+	TBitField result(bitLen);
+
+	for (int i = 0; i < memLen; i++) {
+		result.pMem[i] = ~pMem[i];
+	}
+
+	int extraBits = (memLen * (sizeof(TELEM) * 8)) - bitLen;
+	if (extraBits > 0) {
+		TELEM mask = (TELEM)(-1);
+		mask >>= extraBits;      
+		result.pMem[memLen - 1] &= mask;
+	}
+
+	return result;
 }
 
 // ввод/вывод
